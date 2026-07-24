@@ -8,7 +8,7 @@ grist.onRecords(function (records) {
 
     records.forEach(function (record){
         const ligneEl = document.createElement('div');
-        const ligneEl.textContent = record.A + " " + record.B + " - " + record.C;
+        ligneEl.textContent = record.A + " " + record.B + " - " + record.C;
         listeEl.appendChild(ligneEl);
     })
 });
