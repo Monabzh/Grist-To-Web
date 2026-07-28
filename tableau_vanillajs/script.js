@@ -1,4 +1,4 @@
-grist.ready({ requiredAccess: 'read table'});
+grist.ready({ requiredAccess: 'full'});
 
 grist.onRecords(function (records) {
     // conteneur
@@ -34,3 +34,7 @@ grist.onRecords(function (records) {
         table.appendChild(tr);
     });
 });
+
+function formaterValeur(valeur) {
+    
+}
