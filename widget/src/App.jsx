@@ -2,6 +2,7 @@
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
 import { formaterValeur } from './formaterValeur'
 import { Carte } from './Carte'
+import { Kanban } from './Kanban'
 import { useState, useEffect } from 'react'
 
 function App() {
@@ -64,6 +65,9 @@ function App() {
           <Carte key={record.id} record={record} colonnes={colonnes} colInfos={colInfos}/>
         ))}
       </div>
+
+      <Kanban records={records} colonnes={colonnes} colInfos={colInfos} champ="B"/>
+
     </>
 
   )
