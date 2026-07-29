@@ -49,7 +49,7 @@ function App() {
             {records.map((record) => (
               <TableRow key={record.id}>
                 {colonnes.map((nom) => (
-                  <TableCell key={nom}>{formaterValeur(record[nom])}</TableCell>
+                  <TableCell key={nom}>{formaterValeur(record[nom], colInfos[nom]?.type)}</TableCell>
                 ))}
               </TableRow>
             ))}
