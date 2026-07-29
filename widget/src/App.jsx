@@ -1,10 +1,18 @@
 /* global grist */
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { formaterValeur } from './formaterValeur'
 import { Tableau } from './Tableau'
 import { Carte } from './Carte'
 import { Kanban } from './Kanban'
 import { Galerie } from './Galerie'
 import { useState, useEffect } from 'react'
+
+const VUES = [
+  {id: "tableau", titre:"Tableau", type:"tableau"},
+  {id: "galerie", titre:"Galerie", type:"galerie"},
+  {id: "kanbanB", titre:"par B", type:"kanban", champ:"B"},
+  {id: "kanbanC", titre:"Par C", type:"kanban", champ:"C"},
+]
 
 function App() {
   const [records, setRecords] = useState([])
@@ -40,9 +48,21 @@ function App() {
   return (
     <>
       <h1 className="text-2xl font-bold mb-4">Widget bibliothèque</h1>
-      <Tableau records={records} colonnes={colonnes} colInfos={colInfos} />
-      <Galerie records={records} colonnes={colonnes} colInfos={colInfos} />
-      <Kanban records={records} colonnes={colonnes} colInfos={colInfos} champ="B"/>
+      <Tabs defaultValue={VUES[0].id}>
+        <TabsList>
+          {VUES.map((vue) => (
+          <TabsTrigger key={vue.id} value={vue.id}>{vue.titre}</TabsTrigger>
+          ))}
+        </TabsList>
+
+        {VUES.map((vue) => (
+          <TabsContent key={vue.id} value={vue.id}>
+            {vue.type === "tableau" && <Tableau records={records} colonnes={colonnes} colInfos={colInfos} />}
+            {vue.type === "galerie" && <Galerie records={records} colonnes={colonnes} colInfos={colInfos} />}
+            {vue.type === "kanban" && <Kanban records={records} colonnes={colonnes} colInfos={colInfos} champ={vue.champ} />}
+          </TabsContent>
+        ))}
+      </Tabs>
     </>
   )
 }

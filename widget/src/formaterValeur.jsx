@@ -14,11 +14,11 @@ export function formaterValeur(valeur, type) {
   // liste Grist => badge
   if (Array.isArray(valeur)) {
     return (
-      <div className="flex flex-wrap gap-1">
+      <span className="inline-flex flex-wrap gap-1 align-middle">
         {valeur.slice(0).map((item, i) => (
           <Badge key={i} variant="secondary">{String(item)}</Badge>
         ))}
-      </div>
+      </span>
     )
   }
 
