@@ -1,6 +1,7 @@
 /* global grist */
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
 import { formaterValeur } from './formaterValeur'
+import { Carte } from './Carte'
 import { useState, useEffect } from 'react'
 
 function App() {
@@ -35,27 +36,36 @@ function App() {
     : []
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Widget bibliothèque</h1>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {colonnes.map((nom) => (
-              <TableHead key={nom}>{colInfos[nom]?.label || nom}</TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-          <TableBody>
-            {records.map((record) => (
-              <TableRow key={record.id}>
-                {colonnes.map((nom) => (
-                  <TableCell key={nom}>{formaterValeur(record[nom], colInfos[nom]?.type)}</TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-      </Table>
-    </div>
+    <>
+      <div>
+        <h1 className="text-2xl font-bold mb-4">Widget bibliothèque</h1>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {colonnes.map((nom) => (
+                <TableHead key={nom}>{colInfos[nom]?.label || nom}</TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+            <TableBody>
+              {records.map((record) => (
+                <TableRow key={record.id}>
+                  {colonnes.map((nom) => (
+                    <TableCell key={nom}>{formaterValeur(record[nom], colInfos[nom]?.type)}</TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+        </Table>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4 mt-6">
+        {records.map((record) => (
+          <Carte key={record.id} record={record} colonnes={colonnes} colInfos={colInfos}/>
+        ))}
+      </div>
+    </>
+
   )
 }
 
