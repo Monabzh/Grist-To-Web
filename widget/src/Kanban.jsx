@@ -7,9 +7,16 @@ export function Kanban({ records, colonnes, colInfos, champ }) {
     // grouper les records par la valeur de champ
     const groupes = {}
     records.forEach((record) => {
-        const cle = record[champ] ?? '(vide)'
-        if (!groupes[cle]) groupes[cle] = []
-        groupes[cle].push(record)
+        let valeurs = record[champ]
+        if (Array.isArray(valeurs)) {
+            valeurs = valeurs[0] === 'L' ? valeurs.slice(1) : valeurs
+        } else { valeurs = [valeurs]}
+        if (valeurs.length === 0) valeurs = ['(vide)']
+        valeurs.forEach((v) => {
+            const cle = v ?? '(vide)'
+            if (!groupes[cle]) groupes[cle] = []
+            groupes[cle].push(record)
+        })
     })
 
     const choiceOptions = colInfos[champ]?.choiceOptions || {}
@@ -20,7 +27,7 @@ export function Kanban({ records, colonnes, colInfos, champ }) {
                 const opt = choiceOptions[valeur] || {}
                 const couleur = opt.fillColor || PALETTE[index % PALETTE.length]
                 return(
-                    <div key={valeur} className="flex-1 rounded-lg p-2" style={{ backgroundColor: couleur + '22'}}>
+                    <div key={valeur} className="flex-1 min-w-[200px] rounded-lg p-2" style={{ backgroundColor: couleur + '22'}}>
                         <div className="flex items-center gap-2 mb-2">
                             <Badge style={{ backgroundColor: couleur, color: opt.textColor || '#fff' }}>{valeur}</Badge>
                             <span className="text-sm font-semibold" style={{ color: couleur }}>{cartes.length}</span>
