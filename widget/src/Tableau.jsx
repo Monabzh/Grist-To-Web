@@ -21,7 +21,7 @@ export function Tableau({ records, colonnes, colInfos }) {
                     <TableRow key={record.id} onClick={() =>
                         setSelected(record)} className="cursor-pointer">
                     {colonnes.map((nom) => (
-                        <TableCell key={nom}>{formaterValeur(record[nom], colInfos[nom]?.type)}</TableCell>
+                        <TableCell key={nom}>{formaterValeur(record[nom], colInfos[nom])}</TableCell>
                     ))}
                     </TableRow>
                 ))}

@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/badge"
 
-export function formaterValeur(valeur, type) {
+export function formaterValeur(valeur, colInfo) {
+  const type = colInfo?.type
+
   // vide => rien
   if (valeur === null || valeur === undefined || valeur === '') {
     return ''
@@ -13,18 +15,27 @@ export function formaterValeur(valeur, type) {
 
   // liste Grist => badge
   if (Array.isArray(valeur)) {
+    const items = valeur[0] === 'L' ? valeur.slice(1) : valeur
     return (
       <span className="inline-flex flex-wrap gap-1 align-middle">
-        {valeur.slice(0).map((item, i) => (
-          <Badge key={i} variant="secondary">{String(item)}</Badge>
-        ))}
+        {items.map((item, i) => {
+          const opt = colInfo?.choiceOptions?.[item] || {}
+          return (
+            <Badge variant="secondary" style={{ backgroundColor: opt.fillColor, color: opt.textColor}}>
+              {String(item)}
+            </Badge>
+          )
+      })}
       </span>
     )
   }
 
   // Choix unique => badge
   if (type === 'Choice') {
-    return <Badge variant="secondary">{String(valeur)}</Badge>
+    const opt = colInfo?.choiceOptions?.[valeur] || {}
+    return (
+      <Badge variant="secondary" style={{ backgroundColor: opt.fillColor, color: opt.textColor}}>{String(valeur)}</Badge>
+    )
   }
 
   // Date / Date-heure
