@@ -9,23 +9,19 @@ import { Kanban } from './Kanban'
 import { Galerie } from './Galerie'
 import { useState, useEffect } from 'react'
 
-// const VUES = [
-//   {id: "tableau", titre:"Tableau", type:"tableau"},
-//   {id: "galerie", titre:"Galerie", type:"galerie"},
-//   {id: "kanbanB", titre:"par B", type:"kanban", champ:"B"},
-//   {id: "kanbanC", titre:"Par C", type:"kanban", champ:"C"},
-// ]
-
 function App() {
   const [records, setRecords] = useState([])
   const [colInfos, setColInfos] = useState({})
   const [kanbanVues, setKanbanVues] = useState([])
+  const [titre, setTitre] = useState('')
+  const [editionTitre, setEdititionTitre] = useState(false)
 
   useEffect(() => {
     grist.ready({ requiredAccess: 'full'})
     grist.onRecords((r) => { setRecords(r); chargerColonnes()}, { includeColumns: 'normal'})
     grist.onOptions((options) => {
       setKanbanVues(options?.kanbanVues || [])
+      setTitre(options?.titre || '')
     })
 
   async function chargerColonnes() {
@@ -82,26 +78,48 @@ function App() {
     sauverVues(kanbanVues.filter((v) => v.id !== id))
   }
 
-  return (
-    <>
-      <h1 className="text-2xl font-bold mb-4">Widget bibliothèque</h1>
+  function sauverTitre(valeur) {
+    setTitre(valeur)
+    grist.setOption('titre', valeur)
+  }
 
-      <div className="mb-4 p-3 border rounded">
-        <h3 className="font-semibold mb-2">Vues kanban</h3>
-        {kanbanVues.map((vue) => (
-          <div key={vue.id} className="flex items-center gap-2 mb-2">
-            <Select value={vue.champ} onValueChange={(c) => modifierVue(vue.id, c)}>
-              <SelectTrigger className="w-48"><SelectValue placeholder="Colonne..."/></SelectTrigger>
-              <SelectContent>{colonnes.map((nom) => (
-                <SelectItem key={nom} value={nom}>{colInfos[nom]?.label || nom}</SelectItem>
-              ))}
-              </SelectContent>
-            </Select>
-            <Button variant="destructive" size="sm" onClick={() => supprimerVue(vue.id)}>Supprimer</Button>
-          </div>
-        ))}
-        <Button size="sm" onClick={ajouterVue}>+ Ajouter une vue kanban</Button>
-      </div>
+  return (
+    <div className="p-6">
+      {editionTitre ? (
+        <input 
+          type="text"
+          value={titre}
+          autofocus
+          onChange={(e) => setTitre(e.target.value)}
+          onBlur={() => { setEdititionTitre(false); grist.setOption('titre', titre)}}
+          onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }}
+          className="text-2xl font-bold mb-4 ml-2 border rounded px-1"
+        />
+      ) : (
+        <h1 className="text-2xl font-bold mb-4 ml-2 cursor-text" onDoubleClick={() => setEdititionTitre(true)}>
+          {titre || 'Bibliothèque'}
+        </h1>
+      )}
+
+      <details className="mb-4">
+
+        <summary className="cursor-pointer font-semibold mb-2">Gérer les vues kanban</summary>
+        <div className="mb-4 p-3 border rounded">
+          {kanbanVues.map((vue) => (
+            <div key={vue.id} className="flex items-center gap-2 mb-2">
+              <Select value={vue.champ} onValueChange={(c) => modifierVue(vue.id, c)}>
+                <SelectTrigger className="w-48"><SelectValue placeholder="Colonne..."/></SelectTrigger>
+                <SelectContent>{colonnes.map((nom) => (
+                  <SelectItem key={nom} value={nom}>{colInfos[nom]?.label || nom}</SelectItem>
+                ))}
+                </SelectContent>
+              </Select>
+              <Button variant="destructive" size="sm" onClick={() => supprimerVue(vue.id)}>Supprimer</Button>
+            </div>
+          ))}
+          <Button size="sm" onClick={ajouterVue}>+ Ajouter une vue kanban</Button>
+        </div>
+      </details>
 
       <Tabs defaultValue={vues[0].id}>
         <TabsList>
@@ -118,7 +136,7 @@ function App() {
           </TabsContent>
         ))}
       </Tabs>
-    </>
+    </div>
   )
 }
 
