@@ -2,11 +2,13 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { Badge } from "./components/ui/badge"
 import { formaterValeur } from './formaterValeur'
 import { Tableau } from './Tableau'
 import { Carte } from './Carte'
 import { Kanban } from './Kanban'
 import { Galerie } from './Galerie'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu"
 import { useState, useEffect } from 'react'
 
 function App() {
@@ -40,6 +42,7 @@ function App() {
             label: cols.label[i],
             type: cols.type[i],
             choiceOptions: options.choiceOptions || {},
+            choices: options.choices || [],
           }
         }
       })
@@ -64,6 +67,8 @@ function App() {
       champ: v.champ,
       tri: v.tri,
       sensTri: v.sensTri,
+      filtreChamp: v.filtreChamp,
+      filtreVals: v.filtreVals,
     })),
   ]
 
@@ -138,8 +143,9 @@ function App() {
             {vue.type === "kanban" && (
             <>
               <details className="mb-2">
-                <summary className="cursor-pointer text-sm text-muted-foreground">- Réglage</summary>
-                <div className="flex items-center gap-2 mt-2">
+                <summary className="cursor-pointer text-sm text-muted-foreground">Réglage</summary>
+                <div className="flex flex-col gap-2 mt-2">
+                  <div className="flex items-center gap-2">
                   <span className="text-sm">Trier par :</span>
                   <Select value={vue.tri || ''} onValueChange={(c) => modifierVue(vue.vueId, {tri : c})}>
                     <SelectTrigger className="w-40"><SelectValue paceholder="-"/></SelectTrigger>
@@ -155,10 +161,58 @@ function App() {
                       <SelectItem value="desc">décroissant</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm ml-4">Filtrer :</span>
+                  <Select value={vue.filtreChamp || ''} onValueChange={(c) => modifierVue(vue.vueId, { filtreChamp: c})}>
+                    <SelectTrigger className="w-40"><SelectValue placehorder="Colonne..."/></SelectTrigger>
+                    <SelectContent>{colonnes.map((nom) => (
+                      <SelectItem key={nom} value={nom}>{colInfos[nom]?.label || nom}</SelectItem>
+                    ))}</SelectContent>
+                  </Select>
 
+                  <span className="text-sm">contient :</span>
+                  {colInfos[vue.filtreChamp]?.choices?.length ? (
+                    colInfos[vue.filtreChamp].choices.map((choix) => {
+                    const opt = colInfos[vue.filtreChamp].choiceOptions?.[choix] || {}
+                    const actif = (vue.filtreVals || []).includes(choix)
+                    
+                    return(
+                      <Badge
+                      key={choix}
+                      className="cursor-pointer"
+                      variant={actif ? "default" : "outline"}
+                      style={actif ? { backgroundColor: opt.fillColor, color: opt.textColor } : {}}
+                      onClick={() => {
+                        const actuels = vue.filtreVals || []
+                        modifierVue(vue.vueId, { filtreVals: actif ? actuels.filter((x) => x !== choix) : [...actuels, choix] })
+                      }}>
+                        {choix}
+                      </Badge>
+                    )
+                  })
+                ) : (
+                  <>
+                  {(vue.filtreVals || []).map((val, i) => (
+                    <Badge key={i} variant="secondary" className="cursor-pointer" onClick={() => modifierVue(vue.vueId, { filtreVals: vue.filtreVals.filter((x) => x !== val) })}>{val} x</Badge>
+                  ))}
+                  <input
+                    type="text"
+                    paceholder="ajouter + Entrée"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.target.value.trim()) {
+                        modifierVue(vue.vueId, { filtreVals: [...(vue.filtreVals || []), e.target.value.trim()]})
+                        e.target.value=''
+                      }
+                    }}
+                    className="border rounded px-2 py-1 text-sm w-40"
+                    />
+                    </>
+                )}
+                  </div>
                 </div>
               </details>
-              <Kanban records={records} colonnes={colonnes} colInfos={colInfos} champ={vue.champ} tri={vue.tri} sensTri={vue.sensTri} />
+              <Kanban records={records} colonnes={colonnes} colInfos={colInfos} champ={vue.champ} tri={vue.tri} sensTri={vue.sensTri} filtreChamp={vue.filtreChamp} filtreVals={vue.filtreVals}/>
             </>
             )}
           </TabsContent>

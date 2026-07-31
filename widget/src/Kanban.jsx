@@ -3,10 +3,17 @@ import { Badge } from "@/components/ui/badge"
 
 const PALETTE = ['#64748B', '#9683C4', '#49cca0', '#cc67e0', '#C99A57', '#B87BA0', '#5CA1A6', '#C58A6B']
 
-export function Kanban({ records, colonnes, colInfos, champ, tri, sensTri }) {
+export function Kanban({ records, colonnes, colInfos, champ, tri, sensTri, filtreChamp, filtreVals }) {
     // grouper les records par la valeur de champ
+    const recordsFiltres = (filtreChamp && filtreVals?.length)
+        ? records.filter((r) => {
+            const v = r[filtreChamp]
+            const texte = (Array.isArray(v) ? v.join(' ') : String(v ?? '')).toLowerCase()
+            return filtreVals.some((val) => texte.includes(String(val).toLowerCase()))
+        })
+        :records
     const groupes = {}
-    records.forEach((record) => {
+    recordsFiltres.forEach((record) => {
         let valeurs = record[champ]
         if (Array.isArray(valeurs)) {
             valeurs = valeurs[0] === 'L' ? valeurs.slice(1) : valeurs
