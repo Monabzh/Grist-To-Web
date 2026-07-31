@@ -59,8 +59,11 @@ function App() {
     ...kanbanVues.map((v) => ({
       id: "kanban-" + v.id,
       titre: "Par " + (colInfos[v.champ]?.label || v.champ),
+      vueId: v.id,
       type:"kanban",
       champ: v.champ,
+      tri: v.tri,
+      sensTri: v.sensTri,
     })),
   ]
 
@@ -71,8 +74,8 @@ function App() {
   function ajouterVue() {
     sauverVues([...kanbanVues, { id: Date.now(), champ: colonnes[0] }])
   }
-  function modifierVue(id, champ) {
-    sauverVues(kanbanVues.map((v) => (v.id === id ? { ...v, champ } : v)))
+  function modifierVue(id, changements) {
+    sauverVues(kanbanVues.map((v) => (v.id === id ? { ...v, ...changements } : v)))
   }
   function supprimerVue(id) {
     sauverVues(kanbanVues.filter((v) => v.id !== id))
@@ -107,7 +110,7 @@ function App() {
         <div className="mb-4 p-3 border rounded">
           {kanbanVues.map((vue) => (
             <div key={vue.id} className="flex items-center gap-2 mb-2">
-              <Select value={vue.champ} onValueChange={(c) => modifierVue(vue.id, c)}>
+              <Select value={vue.champ} onValueChange={(c) => modifierVue(vue.id, {champ: c})}>
                 <SelectTrigger className="w-48"><SelectValue placeholder="Colonne..."/></SelectTrigger>
                 <SelectContent>{colonnes.map((nom) => (
                   <SelectItem key={nom} value={nom}>{colInfos[nom]?.label || nom}</SelectItem>
@@ -132,7 +135,32 @@ function App() {
           <TabsContent key={vue.id} value={vue.id}>
             {vue.type === "tableau" && <Tableau records={records} colonnes={colonnes} colInfos={colInfos} />}
             {vue.type === "galerie" && <Galerie records={records} colonnes={colonnes} colInfos={colInfos} />}
-            {vue.type === "kanban" && <Kanban records={records} colonnes={colonnes} colInfos={colInfos} champ={vue.champ} />}
+            {vue.type === "kanban" && (
+            <>
+              <details className="mb-2">
+                <summary className="cursor-pointer text-sm text-muted-foreground">- Réglage</summary>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-sm">Trier par :</span>
+                  <Select value={vue.tri || ''} onValueChange={(c) => modifierVue(vue.vueId, {tri : c})}>
+                    <SelectTrigger className="w-40"><SelectValue paceholder="-"/></SelectTrigger>
+                    <SelectContent>{colonnes.map((nom) => (
+                      <SelectItem key={nom} value={nom}>{colInfos[nom]?.label || nom}</SelectItem>
+                    ))}</SelectContent>
+                  </Select>
+
+                  <Select value={vue.sensTri || 'asc'} onValueChange={(c) => modifierVue(vue.vueId, { sensTri: c})}>
+                    <SelectTrigger className="w-32"><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="asc">croissant</SelectItem>
+                      <SelectItem value="desc">décroissant</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                </div>
+              </details>
+              <Kanban records={records} colonnes={colonnes} colInfos={colInfos} champ={vue.champ} tri={vue.tri} sensTri={vue.sensTri} />
+            </>
+            )}
           </TabsContent>
         ))}
       </Tabs>

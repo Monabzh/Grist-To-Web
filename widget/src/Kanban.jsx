@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge"
 
 const PALETTE = ['#64748B', '#9683C4', '#49cca0', '#cc67e0', '#C99A57', '#B87BA0', '#5CA1A6', '#C58A6B']
 
-export function Kanban({ records, colonnes, colInfos, champ }) {
+export function Kanban({ records, colonnes, colInfos, champ, tri, sensTri }) {
     // grouper les records par la valeur de champ
     const groupes = {}
     records.forEach((record) => {
@@ -26,6 +26,14 @@ export function Kanban({ records, colonnes, colInfos, champ }) {
             {Object.entries(groupes).map(([valeur, cartes], index) => {
                 const opt = choiceOptions[valeur] || {}
                 const couleur = opt.fillColor || PALETTE[index % PALETTE.length]
+                const cartesTriees = tri ? [...cartes].sort((a,b) => {
+                    const va = a[tri], vb = b[tri]
+                    let c
+                    if (typeof va === 'number' && typeof vb === 'number') c = va -vb
+                    else c = String(va ?? '').localeCompare(String(vb ?? ''))
+                    return sensTri === 'desc' ? -c : c
+                })
+                : cartes
                 return(
                     <div key={valeur} className="flex-1 min-w-[200px] rounded-lg p-2" style={{ backgroundColor: couleur + '22'}}>
                         <div className="flex items-center gap-2 mb-2">
@@ -33,7 +41,7 @@ export function Kanban({ records, colonnes, colInfos, champ }) {
                             <span className="text-sm font-semibold" style={{ color: couleur }}>{cartes.length}</span>
                             </div>
                                <div className="flex flex-col gap-2">
-                                {cartes.map((record) => (
+                                {cartesTriees.map((record) => (
                                     <Carte key={record.id} record={record} colonnes={colonnes} colInfos={colInfos} />
                             ))}
                         </div>
