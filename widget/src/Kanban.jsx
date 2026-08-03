@@ -1,10 +1,28 @@
+/* global grist */
 import { Carte } from "./Carte"
 import { Badge } from "@/components/ui/badge"
+import { DndContext, DragOverlay, useDraggable, useDroppable } from "@dnd-kit/core"
+import { useState } from "react"
 
 const PALETTE = ['#64748B', '#9683C4', '#49cca0', '#cc67e0', '#C99A57', '#B87BA0', '#5CA1A6', '#C58A6B']
 
+function CarteDraggable({ id, children }) {
+    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({id})
+    return (
+        <div ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab" style= {{ opacity: isDragging ? 0.4 : 1 }}>
+            {children}
+        </div>
+    )
+}
+
+function ColonneDroppable({ id, className, style, children }) {
+    const { setNodeRef, isOver } = useDroppable({id})
+    return <div ref={setNodeRef} className={className + (isOver ? " ring-2 ring-blue-400" : "")} style={style}>{children}</div>
+}
+
 export function Kanban({ records, colonnes, colInfos, champ, tri, sensTri, filtreChamp, filtreVals }) {
     // grouper les records par la valeur de champ
+    const [activeId, setActiveId] = useState(null)
     const recordsFiltres = (filtreChamp && filtreVals?.length)
         ? records.filter((r) => {
             const v = r[filtreChamp]
@@ -29,32 +47,53 @@ export function Kanban({ records, colonnes, colInfos, champ, tri, sensTri, filtr
     const choiceOptions = colInfos[champ]?.choiceOptions || {}
 
     return(
-        <div className="flex gap-4 items-start">
-            {Object.entries(groupes).map(([valeur, cartes], index) => {
-                const opt = choiceOptions[valeur] || {}
-                const couleur = opt.fillColor || PALETTE[index % PALETTE.length]
-                const cartesTriees = tri ? [...cartes].sort((a,b) => {
-                    const va = a[tri], vb = b[tri]
-                    let c
-                    if (typeof va === 'number' && typeof vb === 'number') c = va -vb
-                    else c = String(va ?? '').localeCompare(String(vb ?? ''))
-                    return sensTri === 'desc' ? -c : c
-                })
-                : cartes
-                return(
-                    <div key={valeur} className="flex-1 min-w-[200px] rounded-lg p-2" style={{ backgroundColor: couleur + '22'}}>
-                        <div className="flex items-center gap-2 mb-2">
-                            <Badge style={{ backgroundColor: couleur, color: opt.textColor || '#fff' }}>{valeur}</Badge>
-                            <span className="text-sm font-semibold" style={{ color: couleur }}>{cartes.length}</span>
+        <DndContext onDragStart={(e) => { setActiveId(e.active.id) }}
+        onDragEnd={(e) => {
+            setActiveId(null)
+            if (!e.over) return
+            const type = colInfos[champ]?.type
+            const rowId = e.active.id
+            const nouvelleValeur = e.over.id
+            const valeur = type === 'ChoiceList' ? ['L', nouvelleValeur] : nouvelleValeur
+            grist.getTable()
+                .update({ id: rowId, fields: { [champ]: nouvelleValeur }})
+                .catch((err) => console.log('écriture refusée (lecture seule)', err))
+        }}>
+
+            <div className="flex gap-4 items-start">
+                {Object.entries(groupes).map(([valeur, cartes], index) => {
+                    const opt = choiceOptions[valeur] || {}
+                    const couleur = opt.fillColor || PALETTE[index % PALETTE.length]
+                    const cartesTriees = tri ? [...cartes].sort((a,b) => {
+                        const va = a[tri], vb = b[tri]
+                        let c
+                        if (typeof va === 'number' && typeof vb === 'number') c = va -vb
+                        else c = String(va ?? '').localeCompare(String(vb ?? ''))
+                        return sensTri === 'desc' ? -c : c
+                    })
+                    : cartes
+                    return(
+                        <ColonneDroppable key={valeur} id={valeur} className="flex-1 min-w-[200px] rounded-lg p-2" style={{ backgroundColor: couleur + '22'}}>
+                            <div className="flex items-center gap-2 mb-2">
+                                <Badge style={{ backgroundColor: couleur, color: opt.textColor || '#fff' }}>{valeur}</Badge>
+                                <span className="text-sm font-semibold" style={{ color: couleur }}>{cartes.length}</span>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    {cartesTriees.map((record) => (
+                                        <CarteDraggable key={record.id} id={record.id}>
+                                            <Carte record={record} colonnes={colonnes} colInfos={colInfos} />
+                                        </CarteDraggable>  
+                                ))}
                             </div>
-                               <div className="flex flex-col gap-2">
-                                {cartesTriees.map((record) => (
-                                    <Carte key={record.id} record={record} colonnes={colonnes} colInfos={colInfos} />
-                            ))}
-                        </div>
-                    </div>
-                )
-            })}
-        </div>
+                        </ColonneDroppable>
+                    )
+                })}
+            </div>
+            <DragOverlay>
+                {activeId ? (
+                    <Carte record={records.find((r) => r.id === activeId)} colonnes={colonnes} colInfos={colInfos} />
+                ) : null}
+            </DragOverlay>
+        </DndContext>
     )
 }
